@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opening App...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        (function() {
+            // Extract tokens from URL (query params or hash)
+            const urlParams = new URLSearchParams(window.location.search);
+            const hash = window.location.hash.substring(1);
+            const hashParams = new URLSearchParams(hash);
+            
+            // Get tokens from query params or hash (Supabase uses hash for security)
+            const access_token = urlParams.get('access_token') || hashParams.get('access_token');
+            const refresh_token = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+            const type = urlParams.get('type') || hashParams.get('type');
+            const code = urlParams.get('code') || hashParams.get('code');
+            
+            // Build app deep link URL with custom scheme
+            let appUrl = 'myapp://auth/reset';
+            const params = new URLSearchParams();
+            
+            // Preserve all tokens in the app URL
+            if (access_token) params.append('access_token', access_token);
+            if (refresh_token) params.append('refresh_token', refresh_token);
+            if (type) params.append('type', type);
+            if (code) params.append('code', code);
+            
+            if (params.toString()) {
+                appUrl += '?' + params.toString();
+            }
+            
+            // If we have a hash fragment with tokens, preserve it
+            if (hash && hash.includes('access_token')) {
+                appUrl += '#' + hash;
+            }
+            
+            console.log('Redirecting to app:', appUrl);
+            
+            // Try to open the app immediately
+            window.location.href = appUrl;
+            
+            // Fallback: Show message if app doesn't open
+            let redirectAttempted = false;
+            setTimeout(function() {
+                if (!redirectAttempted) {
+                    document.querySelector('.container').innerHTML = 
+                        '<h2>Opening App...</h2>' +
+                        '<p>If the app doesn\'t open automatically, please:</p>' +
+                        '<ol style="text-align: left; max-width: 400px; margin: 20px auto;">' +
+                        '<li>Open the app manually</li>' +
+                        '<li>Navigate to the Reset Password screen</li>' +
+                        '<li>Or try clicking the link again</li>' +
+                        '</ol>';
+                }
+            }, 1500);
+            
+            // Also try using window.open as fallback
+            setTimeout(function() {
+                try {
+                    window.open(appUrl, '_blank');
+                } catch (e) {
+                    console.error('Failed to open app:', e);
+                }
+            }, 500);
+        })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Opening App...</h2>
+        <div class="spinner"></div>
+        <p>Please wait while we redirect you...</p>
+    </div>
+</body>
+</html>
+
