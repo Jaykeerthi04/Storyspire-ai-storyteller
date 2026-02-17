@@ -1,19 +1,22 @@
-# Storyspire
+# Storyspire - AI Storyteller
 
 A cross-platform mobile app that generates stories with images and narration using Google Gemini AI. Built with React Native (Expo), Supabase, and Google Gemini API.
 
+**Repository**: https://github.com/Jaykeerthi04/storyspire-ai-storyteller
+
 ## Features
 
-- **Story Generation**: Generate creative stories using Google Gemini AI
+- **Story Generation**: Generate creative, unique stories instantly with AI
 - **Dual Audience Modes**:
-  - Child Mode: Simple, short, fun stories for ages 5-12
-  - Adult Mode: Detailed, creative stories for adults and writers
-- **Text-to-Speech Narration**: Listen to your stories with built-in voice narration
-- **User Authentication**: Secure sign up and login with Supabase
-- **Story Library**: Save and manage your generated stories
-- **Favorites**: Mark your favorite stories for quick access
-- **Profile Management**: Customize your profile and preferences
-- **AI-Generated Images**: Each story comes with a relevant image
+  - **Child Mode**: Simple, short, fun stories optimized for ages 5-12
+  - **Adult Mode**: Detailed, creative stories for adults, writers, and creative professionals
+- **Text-to-Speech Narration**: Listen to your stories with natural-sounding voice narration (multiple voices available)
+- **User Authentication**: Secure sign up and login with email
+- **Story Library**: Save and manage all your generated stories
+- **Favorites**: Bookmark your favorite stories for quick access
+- **Profile Management**: Customize your profile, story preferences, and account settings
+- **AI-Generated Images**: Each story comes with a relevant, contextual AI-generated image
+- **Offline Access**: Stories are saved locally for offline reading
 
 ## Tech Stack
 
@@ -27,9 +30,11 @@ A cross-platform mobile app that generates stories with images and narration usi
 ## Prerequisites
 
 - Node.js 18+
+- npm or yarn
 - Supabase account + project
-- Supabase CLI (optional for migrations): `npm i -g supabase`
 - Google Gemini API key
+- Expo Go app (for mobile testing)
+- Optional: Supabase CLI for local development: `npm i -g supabase`
 
 ## Setup Instructions
 
@@ -203,6 +208,23 @@ If authentication fails:
 - **iOS**: Full support (requires Expo Go or dev build)
 - **Android**: Full support (requires Expo Go or dev build)
 - **Web**: Supported (TTS may have limited functionality)
+
+## Getting Help
+
+- Check the [Troubleshooting](#troubleshooting) section
+- Review Supabase documentation: https://supabase.com/docs
+- Google Gemini documentation: https://ai.google.dev/docs
+- Expo documentation: https://docs.expo.dev/
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
