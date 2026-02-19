@@ -3,6 +3,41 @@
 A cross-platform mobile app that generates stories with images and narration using Google Gemini AI. Built with React Native (Expo), Supabase, and Google Gemini API.
 
 **Repository**: https://github.com/Jaykeerthi04/storyspire-ai-storyteller
+## 📸 App Preview
+
+### 🔐 Authentication
+![Login](assets/login.png)
+
+### 🏠 Home Screen – Story Mode Toggle
+![Home Toggle](assets/home-toggle.png)
+
+### 📖 AI Story Generation
+![Story](assets/story-generation.png)
+
+### 🎨 Home Screen
+![Home](assets/home.png)
+
+### 🔊 Text-to-Speech Settings
+![TTS](assets/tts-settings.png)
+
+### 🔊 Voice Selection
+![Voice](assets/tts-settings-voice.png)
+
+### 📚 My Library
+![Library](assets/library.png)
+
+### 👤 Profile
+![Profile](assets/profile.png)
+
+## 🚀 Key Highlights
+
+- 🔐 Secure authentication with Supabase Auth
+- 🎨 AI-powered story & image generation using Google Gemini
+- 🧒👨 Dual audience modes (Child / Adult toggle)
+- 🔊 Text-to-Speech narration with multiple voices
+- 📚 Persistent story library with favorites
+- 🌗 Dark / Light theme support
+- 🛡 Row Level Security (RLS) for user data isolation
 
 ## Features
 
