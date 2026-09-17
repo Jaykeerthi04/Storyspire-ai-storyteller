@@ -2,9 +2,7 @@ const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 // List of image generation models to try
 const IMAGE_MODELS = [
-  'gemini-2.0-flash-exp',  // Latest experimental model
-  'gemini-2.5-flash-image', // Image generation model
-  'gemini-1.5-flash',      // Fallback
+  'gemini-3.1-flash-image', // Image generation model
 ];
 
 async function tryGeminiImageModel(prompt: string, model: string): Promise<string> {

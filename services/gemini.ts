@@ -1,23 +1,18 @@
 import { AudienceMode } from '@/types/database';
 import { generateGeminiImageFromPrompt } from './gemini-image';
+import { generatePollinationsImageFromPrompt } from './pollinations-image';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 // Temporary diagnostic log; remove after verification
 // eslint-disable-next-line no-console
 console.log('[env] EXPO_PUBLIC_GEMINI_API_KEY present:', !!GEMINI_API_KEY);
 
-// List of models to try in order (most compatible first)
-// Using v1 API for stability
-const MODELS_TO_TRY = [
-  'gemini-1.5-flash',      // Fast and widely available
-  'gemini-1.5-pro',        // High quality
-  'gemini-pro',            // Basic model
-  'gemini-2.5-flash',      // Newer version if available
-  'gemini-2.5-pro',        // Newer version if available
-];
+// Text generation model configuration
+const TEXT_MODEL = 'gemini-3-flash-preview';
+const API_VERSION = 'v1beta';
 
 // Helper to build API URL
-const buildApiUrl = (model: string, version: string = 'v1') => {
+const buildApiUrl = (model: string = TEXT_MODEL, version: string = API_VERSION) => {
   return `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent`;
 };
 
@@ -234,8 +229,8 @@ Provide your response in the following JSON format:
 }`;
 
   // Helper function to make API request
-  const makeApiRequest = async (model: string, version: string = 'v1'): Promise<Response> => {
-    const url = buildApiUrl(model, version);
+  const makeApiRequest = async (promptText: string): Promise<Response> => {
+    const url = buildApiUrl(TEXT_MODEL, API_VERSION);
     return await fetch(`${url}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -246,7 +241,7 @@ Provide your response in the following JSON format:
           {
             parts: [
               {
-                text: storyPrompt,
+                text: promptText,
               },
             ],
           },
@@ -261,91 +256,29 @@ Provide your response in the following JSON format:
     });
   };
 
-  // Try multiple models until one works
-  let response: Response | null = null;
-  let lastError: string = '';
-  let triedModels: string[] = [];
-  let success = false;
-  
   try {
-    // Try v1 models first, then v1beta if needed
-    const apiVersions = ['v1', 'v1beta'] as const;
-    
-    outerLoop: for (const model of MODELS_TO_TRY) {
-      for (const version of apiVersions) {
-        try {
-          const modelKey = `${model} (${version})`;
-          triedModels.push(modelKey);
-          
-          response = await makeApiRequest(model, version);
-          
-          if (response.ok) {
-            // Success! Break out of all loops
-            success = true;
-            break outerLoop;
-          }
-          
-          // If not ok, try to parse error
-          const status = response.status;
-          let errorMessage = '';
-          
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.error?.message || `HTTP ${status}`;
-          } catch {
-            errorMessage = `HTTP ${status}`;
-          }
-          
-          lastError = `${model} (${version}): ${errorMessage}`;
+    const response = await makeApiRequest(storyPrompt);
 
-          // Diagnostic: log the full response body when available to help debugging
-          try {
-            const bodyText = await response.text();
-            // eslint-disable-next-line no-console
-            console.error(`[gemini] ${model} ${version} response body:`, bodyText);
-          } catch (e) {
-            // ignore
-          }
-          
-          // If it's a 404 or "not found" error, try next model/version
-          const isNotFoundError = status === 404 || 
-            errorMessage.includes('not found') || 
-            errorMessage.includes('not supported');
-          
-          if (isNotFoundError) {
-            response = null; // Reset to try next model/version
-            // If we've tried both versions, move to next model
-            if (version === 'v1beta') {
-              break; // Break from version loop, continue to next model
-            }
-            continue; // Try v1beta for same model
-          } else {
-            // Other errors - if we've tried both versions, move to next model
-            response = null;
-            if (version === 'v1beta') {
-              break; // Break from version loop, continue to next model
-            }
-            continue; // Try v1beta version
-          }
-        } catch (requestError: any) {
-          // Network errors or other issues
-          const modelKey = `${model} (${version})`;
-          lastError = `${modelKey}: ${requestError.message || 'Request failed'}`;
-          response = null;
-          
-          if (version === 'v1beta') {
-            break; // Break from version loop, continue to next model
-          }
-          continue; // Try v1beta for same model
-        }
+    if (!response.ok) {
+      const status = response.status;
+      let errorMessage = '';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error?.message || `HTTP ${status}`;
+      } catch {
+        errorMessage = `HTTP ${status}`;
       }
-    }
-    
-    // If we tried all models and none worked
-    if (!success || !response || !response.ok) {
-      const errorMsg = `Failed to generate story. Tried models: ${triedModels.join(', ')}. ` +
-        `Last error: ${lastError || 'Unknown error'}. ` +
-        `Please check your API key and ensure you have access to Gemini models.`;
+
+      // Diagnostic: log the full response body when available
+      try {
+        const bodyText = await response.text();
+        // eslint-disable-next-line no-console
+        console.error(`[gemini] ${TEXT_MODEL} ${API_VERSION} response body:`, bodyText);
+      } catch {
+        // ignore
+      }
+
+      const errorMsg = `Failed to generate story with ${TEXT_MODEL} (${API_VERSION}): ${errorMessage}. Please check your API key and ensure you have access to Gemini models.`;
       // eslint-disable-next-line no-console
       console.error('[gemini] Story generation failed:', errorMsg);
       throw new Error(errorMsg);
@@ -411,50 +344,20 @@ Provide your response in JSON format:
 
       // Try one more time with retry prompt
       try {
-        let retrySuccess = false;
-        retryLoop: for (const model of MODELS_TO_TRY.slice(0, 2)) { // Try first 2 models
-          for (const version of ['v1', 'v1beta'] as const) {
-            try {
-              const retryUrl = buildApiUrl(model, version);
-              const retryResponse = await fetch(`${retryUrl}?key=${GEMINI_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  contents: [{ parts: [{ text: retryPrompt }] }],
-                  generationConfig: {
-                    temperature: 0.8,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 4096,
-                  },
-                }),
-              });
-              
-              if (retryResponse.ok) {
-                const retryData = await retryResponse.json();
-                if (retryData.candidates?.[0]?.content?.parts?.[0]?.text) {
-                  const retryResult = extractTitleAndContent(retryData.candidates[0].content.parts[0].text);
-                  const retryWordCount = retryResult.content.trim().split(/\s+/).length;
-                  
-                  if (retryResult.content && retryResult.content.trim().length >= 100 && retryWordCount >= minWordCount) {
-                    title = retryResult.title;
-                    content = retryResult.content;
-                    retrySuccess = true;
-                    break retryLoop; // Success, use retry result
-                  }
-                }
-              }
-            } catch {
-              continue;
+        const retryResponse = await makeApiRequest(retryPrompt);
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          if (retryData.candidates?.[0]?.content?.parts?.[0]?.text) {
+            const retryResult = extractTitleAndContent(retryData.candidates[0].content.parts[0].text);
+            const retryWordCount = retryResult.content.trim().split(/\s+/).length;
+            
+            if (retryResult.content && retryResult.content.trim().length >= 100 && retryWordCount >= minWordCount) {
+              title = retryResult.title;
+              content = retryResult.content;
             }
           }
         }
-        
-        // If retry didn't succeed, we'll use original or throw error below
-        if (!retrySuccess) {
-          // Still validate original
-        }
-      } catch (retryError) {
+      } catch {
         // If retry fails completely, we'll validate original below
       }
       
@@ -496,27 +399,60 @@ Provide your response in JSON format:
 
 
 export async function generateStoryImage(prompt: string): Promise<string> {
-  // Use only Gemini for image generation
-  try {
-    // Validate prompt
-    const p = String(prompt || '').trim();
-    try { console.info('[gemini.generateStoryImage] final prompt preview:', p.slice(0, 2000)); } catch {}
-    if (!p || p.length < 10) {
-      console.error('[gemini.generateStoryImage] invalid/empty prompt');
-      throw new Error('Invalid image prompt');
-    }
-
-    // Use Gemini image generator only
-    const imageData = await generateGeminiImageFromPrompt(p);
-    if (imageData) {
-      console.info('[gemini.generateStoryImage] Gemini image generated successfully');
-      return imageData;
-    }
-
-    throw new Error('Gemini image generation returned no image');
-  } catch (e: any) {
-    try { console.error('[gemini.generateStoryImage] error:', e?.message || e, 'promptPreview:', String(prompt).slice(0, 400)); } catch {}
-    // Re-throw so callers can decide how to handle UI; include safe message
-    throw new Error(e?.message || 'Image generation failed');
+  // Validate prompt
+  const p = String(prompt || '').trim();
+  if (__DEV__) {
+    console.info('[generateStoryImage] prompt preview:', p.slice(0, 2000));
   }
+  if (!p || p.length < 10) {
+    console.error('[generateStoryImage] invalid/empty prompt');
+    throw new Error('Invalid image prompt');
+  }
+
+  const errors: string[] = [];
+
+  // --- 1. Pollinations (free, no API key required) ---
+  try {
+    if (__DEV__) console.info('[generateStoryImage] trying Pollinations…');
+    const pollinationsResult = await generatePollinationsImageFromPrompt(p);
+    if (pollinationsResult) {
+      if (__DEV__) console.info('[generateStoryImage] Pollinations succeeded');
+      return pollinationsResult;
+    }
+    errors.push('Pollinations returned no image');
+  } catch (e: any) {
+    const msg = e?.message || 'Unknown error';
+    errors.push(`Pollinations: ${msg}`);
+    if (__DEV__) console.warn('[generateStoryImage] Pollinations failed:', msg);
+  }
+
+  // --- 2. Gemini (requires API key + quota) ---
+  try {
+    if (__DEV__) console.info('[generateStoryImage] trying Gemini…');
+    const geminiResult = await generateGeminiImageFromPrompt(p);
+    if (geminiResult) {
+      if (__DEV__) console.info('[generateStoryImage] Gemini succeeded');
+      return geminiResult;
+    }
+    errors.push('Gemini returned no image');
+  } catch (e: any) {
+    const msg = e?.message || 'Unknown error';
+    errors.push(`Gemini: ${msg}`);
+    if (__DEV__) console.warn('[generateStoryImage] Gemini failed:', msg);
+  }
+
+  // --- 3. Stability AI (placeholder for future integration) ---
+  // Currently no Stability AI service is wired up, but the slot is reserved
+  // so callers see the correct error message if all providers fail.
+  errors.push('Stability AI: not configured');
+
+  // All providers failed
+  const combined = errors.join(' | ');
+  if (__DEV__) {
+    console.error('[generateStoryImage] all providers failed:', combined);
+  }
+  throw new Error(
+    `Image generation failed — tried Pollinations, Gemini, and Stability AI. Details: ${combined}`,
+  );
 }
+

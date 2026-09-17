@@ -1,4 +1,5 @@
 import * as Speech from 'expo-speech';
+import { getVoiceProfiles, VoiceProfile } from './ttsVoiceProfiles';
 
 /**
  * Friendly voice names for TTS Settings UI
@@ -218,10 +219,10 @@ export function mapSystemIdToFriendlyName(
   const gender = guessGender(voice);
   if (gender === 'female') {
     // Return first female voice profile
-    return profiles.find(v => v.gender === 'female')?.id;
+    return profiles.find((v: VoiceProfile) => v.gender === 'female')?.id;
   } else if (gender === 'male') {
     // Return first male voice profile
-    return profiles.find(v => v.gender === 'male')?.id;
+    return profiles.find((v: VoiceProfile) => v.gender === 'male')?.id;
   }
 
   return undefined;

@@ -27,7 +27,7 @@ import {
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getImagePromptFromStory } from '@/services/image-brief';
-import { generateGeminiImageFromPrompt } from '@/services/gemini-image';
+import { generateStoryImage } from '@/services/gemini';
 import {
   ArrowLeft,
   Play,
@@ -477,8 +477,8 @@ export default function StoryScreen() {
       const derived = await getImagePromptFromStory(story.prompt, story.content, story.audience_mode);
       const imagePrompt = derived || fallbackPrompt;
 
-      // Use only Gemini for image generation
-      const imageUrl = await generateGeminiImageFromPrompt(imagePrompt);
+      // Try Pollinations → Gemini → Stability AI
+      const imageUrl = await generateStoryImage(imagePrompt);
 
       if (!imageUrl) throw new Error('Could not generate an image');
 
@@ -795,8 +795,8 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 250,
-    resizeMode: 'cover',
+    aspectRatio: 1,
+    resizeMode: 'contain',
   },
   imageActions: {
     paddingHorizontal: 24,
