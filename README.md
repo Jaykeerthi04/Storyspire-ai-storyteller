@@ -1,6 +1,6 @@
 # Storyspire - AI Storyteller
 
-A cross-platform mobile app that generates stories with images and narration using Google Gemini AI. Built with React Native (Expo), Supabase, and Google Gemini API.
+A cross-platform mobile app that generates stories with AI-powered images and narration. Story text is generated using Google Gemini, while images are created via a multi-provider fallback chain: Pollinations.ai (primary, free), Google Gemini, and Stability AI (fallback). Built with React Native (Expo), Supabase, and Google Gemini API.
 
 **Repository**: https://github.com/Jaykeerthi04/storyspire-ai-storyteller
 ## 📸 App Preview
@@ -32,7 +32,7 @@ A cross-platform mobile app that generates stories with images and narration usi
 ## 🚀 Key Highlights
 
 - 🔐 Secure authentication with Supabase Auth
-- 🎨 AI-powered story & image generation using Google Gemini
+- 🎨 AI-powered story generation (Google Gemini) & multi-provider image generation (Pollinations → Gemini → Stability AI)
 - 🧒👨 Dual audience modes (Child / Adult toggle)
 - 🔊 Text-to-Speech narration with multiple voices
 - 📚 Persistent story library with favorites
@@ -50,14 +50,18 @@ A cross-platform mobile app that generates stories with images and narration usi
 - **Story Library**: Save and manage all your generated stories
 - **Favorites**: Bookmark your favorite stories for quick access
 - **Profile Management**: Customize your profile, story preferences, and account settings
-- **AI-Generated Images**: Each story comes with a relevant, contextual AI-generated image
+- **AI-Generated Images**: Each story comes with a relevant, contextual AI-generated image powered by a resilient multi-provider fallback chain (Pollinations.ai → Google Gemini → Stability AI)
 - **Offline Access**: Stories are saved locally for offline reading
 
 ## Tech Stack
 
 - **Frontend**: React Native (Expo SDK)
 - **Backend**: Supabase (Database + Authentication)
-- **AI**: Google Gemini API (Text Generation)
+- **Storage**: Supabase Storage (story images stored in the `story-images` bucket, not in the database)
+- **AI**:
+  - Google Gemini API (Text Generation + fallback images)
+  - Pollinations.ai (Primary Image Generation)
+  - Stability AI (Image Fallback)
 - **Speech**: Expo Speech API (Text-to-Speech)
 - **Navigation**: Expo Router
 - **Icons**: Lucide React Native
@@ -68,6 +72,8 @@ A cross-platform mobile app that generates stories with images and narration usi
 - npm or yarn
 - Supabase account + project
 - Google Gemini API key
+- Pollinations API key (free from [enter.pollinations.ai](https://enter.pollinations.ai))
+- Optional: Stability AI API key (for secondary image fallback)
 - Expo Go app (for mobile testing)
 - Optional: Supabase CLI for local development: `npm i -g supabase`
 
@@ -87,8 +93,9 @@ Create or edit `.env` at the project root:
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
-# Optional
-# EXPO_PUBLIC_UNSPLASH_ACCESS_KEY=your_unsplash_key
+EXPO_PUBLIC_POLLINATIONS_API_KEY=your_pollinations_api_key
+# Optional fallback
+# EXPO_PUBLIC_STABILITY_API_KEY=your_stability_api_key
 ```
 
 Notes:
@@ -99,9 +106,12 @@ Notes:
 
 Migrations include:
 - `profiles` and `stories` tables with RLS enabled.
+- `story-images` Supabase Storage bucket with RLS policies for uploads and public read access.
 - Idempotent RLS policies for read/write.
 - `updated_at` triggers for both tables (idempotent).
 - `public.handle_new_user()` and the `auth.users` trigger `on_auth_user_created` to auto-create a profile on signup (guarded and safe to re-run).
+
+> **Important**: The `story-images` Supabase Storage bucket with RLS policies is required for image storage and display. It is created via the migration in `supabase/migrations/` and must be applied through the Supabase SQL Editor or `npx supabase db push` before image generation will work.
 
 Apply via Supabase CLI:
 ```bash
@@ -188,10 +198,10 @@ npm run build:web
 
 ### Google Gemini API
 
-The app uses the Gemini 1.5 Pro model for story generation. The API is configured in `services/gemini.ts` with:
+The app uses the Gemini 3 Flash Preview model (`gemini-3-flash-preview`) for story generation. The API is configured in `services/gemini.ts` with:
 
-- Temperature: 0.9 (for creative output)
-- Max tokens: 2048
+- Temperature: 0.8 (for creative output)
+- Max tokens: 4096
 - Custom prompts based on audience mode
 
 ### Supabase Configuration
@@ -208,6 +218,11 @@ Authentication and database are managed through Supabase with:
 - **Gemini API**: Free tier includes 60 requests per minute
 - **Supabase**: Free tier includes 500MB database, 1GB file storage, 2GB bandwidth
 - **Expo**: Unlimited for development
+
+## Known Limitations
+
+- **Free-Tier Image Providers**: Open image models (such as Pollinations.ai free tier) may occasionally render garbled text or watermarks in generated images — a known characteristic of open image generation models.
+- **Gemini Image Generation**: Gemini's own image generation model (`gemini-3.1-flash-image`) requires a billing-enabled Google Cloud project.
 
 ## Security Features
 
