@@ -3,31 +3,15 @@
 A cross-platform mobile app that generates stories with AI-powered images and narration. Story text is generated using Google Gemini, while images are created via a multi-provider fallback chain: Pollinations.ai (primary, free), Google Gemini, and Stability AI (fallback). Built with React Native (Expo), Supabase, and Google Gemini API.
 
 **Repository**: https://github.com/Jaykeerthi04/storyspire-ai-storyteller
-## 📸 App Preview
+## 📷 App Preview
 
-### 🔐 Authentication
-![Login](assets/login.png)
+| Login | Home Toggle | AI Story Generation | Home |
+|---|---|---|---|
+| <img src="assets/login.png" width="200"> | <img src="assets/home-toggle.png" width="200"> | <img src="assets/story-generation.png" width="200"> | <img src="assets/home.png" width="200"> |
 
-### 🏠 Home Screen – Story Mode Toggle
-![Home Toggle](assets/home-toggle.png)
-
-### 📖 AI Story Generation
-![Story](assets/story-generation.png)
-
-### 🎨 Home Screen
-![Home](assets/home.png)
-
-### 🔊 Text-to-Speech Settings
-![TTS](assets/tts-settings.png)
-
-### 🔊 Voice Selection
-![Voice](assets/tts-settings-voice.png)
-
-### 📚 My Library
-![Library](assets/library.png)
-
-### 👤 Profile
-![Profile](assets/profile.png)
+| TTS Settings | Voice Selection | My Library | Profile |
+|---|---|---|---|
+| <img src="assets/tts-settings.png" width="200"> | <img src="assets/tts-settings-voice.png" width="200"> | <img src="assets/library.png" width="200"> | <img src="assets/profile.png" width="200"> |
 
 ## 🚀 Key Highlights
 
